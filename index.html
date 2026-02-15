@@ -1,0 +1,659 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>とけいクイズ（なんぷん）</title>
+  <style>
+    :root{
+      --bg:#f4f6fb;
+      --card:#ffffff;
+      --text:#1b1f2a;
+      --muted:#5b6478;
+      --line:#e7eaf3;
+      --accent:#2b66ff;
+      --accent2:#1f4fe0;
+      --chip:#eef2ff;
+      --banner:#0f172a;
+    }
+    *{ box-sizing:border-box; }
+    body{
+      margin:0;
+      font-family: system-ui, -apple-system, "Hiragino Kaku Gothic ProN", "Noto Sans JP", sans-serif;
+      background:var(--bg);
+      color:var(--text);
+    }
+
+    /* ===== 追加：ホーム画面案内バナー ===== */
+    .a2hs{
+      position: sticky;
+      top: 0;
+      z-index: 9999;
+      background: rgba(15,23,42,.96);
+      color: #fff;
+      border-bottom: 1px solid rgba(255,255,255,.12);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+    }
+    .a2hsInner{
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 10px 12px;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+      align-items: center;
+    }
+    .a2hsTitle{
+      font-weight: 900;
+      font-size: 13px;
+      letter-spacing: .2px;
+      line-height: 1.35;
+    }
+    .a2hsSteps{
+      margin-top: 4px;
+      font-size: 12px;
+      opacity: .95;
+      line-height: 1.4;
+    }
+    .a2hsSteps b{ color: #fff; }
+    .a2hsBtns{
+      display:flex;
+      gap: 8px;
+      align-items:center;
+      justify-content:flex-end;
+      white-space: nowrap;
+    }
+    .a2hsBtn{
+      border: 1px solid rgba(255,255,255,.18);
+      background: rgba(255,255,255,.10);
+      color: #fff;
+      font-weight: 900;
+      font-size: 12px;
+      padding: 8px 10px;
+      border-radius: 999px;
+      cursor: pointer;
+      line-height: 1;
+    }
+    .a2hsBtn.primary{
+      background: #ffffff;
+      color: #0f172a;
+      border-color: transparent;
+    }
+    .a2hsBtn:active{ transform: translateY(1px); }
+    .a2hsBtn.close{
+      padding: 8px 10px;
+      font-weight: 900;
+    }
+
+    @media (max-width: 520px){
+      .a2hsInner{
+        grid-template-columns: 1fr;
+      }
+      .a2hsBtns{
+        justify-content: flex-start;
+      }
+    }
+    /* ===== /追加 ===== */
+
+    .wrap{
+      max-width: 780px;
+      margin: 0 auto;
+      padding: 22px 16px 32px;
+    }
+    .card{
+      background:var(--card);
+      border:1px solid var(--line);
+      border-radius: 18px;
+      padding: 18px 18px 22px;
+      box-shadow: 0 10px 28px rgba(20,30,60,.08);
+    }
+    .main{
+      display:flex;
+      flex-direction: column;
+      align-items:center;
+      gap: 12px;
+    }
+    .title{
+      margin: 2px 0 0;
+      font-size: 22px;
+      font-weight: 900;
+      letter-spacing: .2px;
+    }
+    .subtitle{
+      margin: -6px 0 4px;
+      font-size: 14px;
+      font-weight: 800;
+      color: var(--muted);
+    }
+
+    .modes{
+      display:flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content:center;
+      margin: 6px 0 2px;
+    }
+    .modeBtn{
+      border:1px solid var(--line);
+      background: #fff;
+      color: var(--text);
+      padding: 10px 12px;
+      border-radius: 999px;
+      font-weight: 900;
+      font-size: 14px;
+      cursor:pointer;
+      min-width: 120px;
+      transition: background .15s ease, border-color .15s ease, transform .05s ease, opacity .15s ease;
+    }
+    .modeBtn:active{ transform: translateY(1px); }
+    .modeBtn.active{
+      background: var(--chip);
+      border-color: rgba(43,102,255,.35);
+    }
+    .modeBtn:disabled{
+      opacity: .55;
+      cursor: default;
+    }
+
+    .clockBox{
+      width: min(380px, 92vw);
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      margin-top: 2px;
+    }
+    .answer{
+      width: min(520px, 96vw);
+      border:1px solid var(--line);
+      border-radius: 14px;
+      padding: 14px 14px;
+      background: #ffffff;
+      text-align:center;
+      min-height: 58px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
+    .answer .text{
+      font-size: 26px;
+      font-weight: 900;
+      letter-spacing: .2px;
+    }
+    .btnArea{
+      width: min(520px, 96vw);
+      margin-top: 2px;
+    }
+    .mainBtn{
+      width:100%;
+      border:0;
+      border-radius: 14px;
+      padding: 14px 14px;
+      font-size: 18px;
+      font-weight: 900;
+      cursor:pointer;
+      background: var(--accent);
+      color:#fff;
+      box-shadow: 0 10px 18px rgba(43,102,255,.18);
+      transition: transform .05s ease, background .15s ease, opacity .15s ease;
+    }
+    .mainBtn:hover{ background: var(--accent2); }
+    .mainBtn:active{ transform: translateY(1px); }
+    .mainBtn:disabled{
+      opacity: .65;
+      cursor: default;
+    }
+
+    .sr{ position:absolute; left:-9999px; top:auto; width:1px; height:1px; overflow:hidden; }
+  </style>
+</head>
+<body>
+
+  <!-- ★追加：ホーム画面に追加（案内バナー） -->
+  <div class="a2hs" id="a2hsBanner" style="display:none;">
+    <div class="a2hsInner">
+      <div>
+        <div class="a2hsTitle" id="a2hsTitle">📲 いつでも 1たっぷで ひらけるようにしよう</div>
+        <div class="a2hsSteps" id="a2hsSteps"></div>
+      </div>
+      <div class="a2hsBtns">
+        <button class="a2hsBtn primary" id="a2hsOk">わかった</button>
+        <button class="a2hsBtn close" id="a2hsClose">✕</button>
+      </div>
+    </div>
+  </div>
+  <!-- /追加 -->
+
+  <div class="wrap">
+    <div class="card">
+      <div class="main">
+        <div class="title">とけいクイズ</div>
+        <div class="subtitle">なんぷん</div>
+
+        <!-- 並び順：10ぷんずつ → 5ふんずつ → ぜんぶ（10ぷんずつをデフォルト） -->
+        <div class="modes" role="group" aria-label="もーど">
+          <button class="modeBtn active" id="mode10">10ぷんずつ</button>
+          <button class="modeBtn" id="mode5">5ふんずつ</button>
+          <button class="modeBtn" id="modeAll">ぜんぶ</button>
+        </div>
+
+        <div class="clockBox" aria-label="とけい">
+          <svg id="clock" width="380" height="380" viewBox="0 0 320 320" role="img" aria-labelledby="clockTitle">
+            <title id="clockTitle">ながい はりの とけい</title>
+
+            <defs>
+              <filter id="softShadow" x="-30%" y="-30%" width="160%" height="160%">
+                <feDropShadow dx="0" dy="6" stdDeviation="8" flood-color="rgba(20,30,60,.18)"/>
+              </filter>
+            </defs>
+
+            <circle cx="160" cy="160" r="142" fill="#ffffff" stroke="#e7eaf3" stroke-width="10" filter="url(#softShadow)"/>
+            <circle cx="160" cy="160" r="126" fill="none" stroke="#f0f2f8" stroke-width="2"/>
+
+            <g id="marks" stroke="#2a3042" stroke-linecap="round"></g>
+            <g id="nums" fill="#2a3042" font-size="14" font-weight="900" text-anchor="middle" dominant-baseline="middle"></g>
+
+            <g id="hands" transform="translate(160 160)">
+              <line id="minHand" x1="0" y1="14" x2="0" y2="-96" stroke="#2a3042" stroke-width="7" stroke-linecap="round"/>
+              <circle cx="0" cy="0" r="7" fill="#2a3042"/>
+              <circle cx="0" cy="0" r="3" fill="#ffffff"/>
+            </g>
+          </svg>
+        </div>
+
+        <div class="answer" aria-live="polite">
+          <div class="text" id="answerText"></div>
+          <div class="sr" id="srAnswer"></div>
+        </div>
+
+        <div class="btnArea">
+          <button class="mainBtn" id="mainBtn">こたえ</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script>
+(() => {
+  /* ===== 追加：ホーム画面に追加（案内バナー） ===== */
+  const A2HS_KEY = "mm_a2hs_dismissed_v1";
+  const a2hsBanner = document.getElementById("a2hsBanner");
+  const a2hsSteps  = document.getElementById("a2hsSteps");
+  const a2hsOk     = document.getElementById("a2hsOk");
+  const a2hsClose  = document.getElementById("a2hsClose");
+
+  function isStandalone(){
+    // iOS: navigator.standalone / 他: display-mode
+    return (window.navigator.standalone === true) ||
+           (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches);
+  }
+
+  function detect(){
+    const ua = navigator.userAgent || "";
+    const isIOS = /iPhone|iPad|iPod/i.test(ua);
+    const isAndroid = /Android/i.test(ua);
+
+    const isCriOS = /CriOS/i.test(ua);
+    const isFxiOS = /FxiOS/i.test(ua);
+    const isEdgiOS = /EdgiOS/i.test(ua);
+    const isOPiOS = /OPiOS/i.test(ua);
+
+    const isSafariIOS = isIOS && !isCriOS && !isFxiOS && !isEdgiOS && !isOPiOS; // ほぼSafari
+    const isChromeAndroid = isAndroid && /Chrome/i.test(ua) && !/SamsungBrowser/i.test(ua);
+
+    return {isIOS, isAndroid, isSafariIOS, isChromeAndroid};
+  }
+
+  function buildSteps(){
+    const {isIOS, isAndroid, isSafariIOS, isChromeAndroid} = detect();
+
+    // モバイルじゃないなら出さない
+    if (!isIOS && !isAndroid) return null;
+
+    if (isIOS && isSafariIOS){
+      // iPhone Safari
+      return `① <b>したの</b>「<b>□↑</b>（きょうゆう）」をおす<br>
+              ② 「<b>ほーむがめんに追加</b>」をえらぶ<br>
+              ③ みぎうえの「<b>追加</b>」で かんりょう`;
+    }
+
+    if (isIOS && !isSafariIOS){
+      // iPhone Chrome/Edge/Firefox など
+      return `※ iPhoneは <b>Safari</b> が いちばんかんたんです<br>
+              ① いまのページを <b>Safari</b> でひらく<br>
+              ② 「<b>□↑</b>（きょうゆう）」→「<b>ほーむがめんに追加</b>」`;
+    }
+
+    if (isChromeAndroid){
+      // Android Chrome
+      return `① みぎうえ「<b>︙</b>」をおす<br>
+              ② 「<b>ほーむがめんに追加</b>」or「<b>あぷりをいんすとーる</b>」<br>
+              ③ 「<b>追加</b>」で かんりょう`;
+    }
+
+    // Androidの他ブラウザなど
+    if (isAndroid){
+      return `① みぎうえの「<b>めにゅー</b>」をおす<br>
+              ② 「<b>ほーむがめんに追加</b>」をさがす<br>
+              ③ 「<b>追加</b>」で かんりょう`;
+    }
+
+    return null;
+  }
+
+  function showA2HSIfNeeded(){
+    try{
+      if (isStandalone()) return; // すでにホーム画面から起動してるなら不要
+      if (localStorage.getItem(A2HS_KEY) === "1") return;
+
+      const steps = buildSteps();
+      if (!steps) return;
+
+      a2hsSteps.innerHTML = steps;
+      a2hsBanner.style.display = "block";
+    } catch(e){
+      // localStorageが使えない環境でも、落とさない
+    }
+  }
+
+  function dismissA2HS(save){
+    try{
+      if (save) localStorage.setItem(A2HS_KEY, "1");
+    } catch(e){}
+    a2hsBanner.style.display = "none";
+  }
+
+  a2hsOk.addEventListener("click", ()=>dismissA2HS(true));
+  a2hsClose.addEventListener("click", ()=>dismissA2HS(true));
+
+  showA2HSIfNeeded();
+  /* ===== /追加 ===== */
+
+
+  /* ===== ここから下はクイズ本体（あなたの最新版のまま） ===== */
+  const marksG = document.getElementById("marks");
+  const numsG  = document.getElementById("nums");
+  const minHand  = document.getElementById("minHand");
+
+  const mainBtn = document.getElementById("mainBtn");
+  const answerText = document.getElementById("answerText");
+  const srAnswer = document.getElementById("srAnswer");
+
+  const modeAll  = document.getElementById("modeAll");
+  const mode5 = document.getElementById("mode5");
+  const mode10 = document.getElementById("mode10");
+
+  const PROMPT = "いま なんぷん？";
+
+  // 効果音（生成）
+  let audioCtx = null;
+  function getCtx(){
+    if (!audioCtx){
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    if (audioCtx.state === "suspended"){
+      audioCtx.resume().catch(()=>{});
+    }
+    return audioCtx;
+  }
+  function beep({freq=880, dur=0.08, type="sine", gain=0.08} = {}){
+    const ctx = getCtx();
+    const t0 = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    const g = ctx.createGain();
+    osc.type = type;
+    osc.frequency.setValueAtTime(freq, t0);
+    g.gain.setValueAtTime(0.0001, t0);
+    g.gain.exponentialRampToValueAtTime(gain, t0 + 0.01);
+    g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+    osc.connect(g);
+    g.connect(ctx.destination);
+    osc.start(t0);
+    osc.stop(t0 + dur + 0.02);
+  }
+  function sfxAnswer(){ beep({freq: 1046, dur: 0.085, type:"triangle", gain:0.09}); }
+  function sfxNext(){
+    beep({freq: 659, dur: 0.07, type:"sine", gain:0.07});
+    setTimeout(()=>beep({freq: 784, dur: 0.07, type:"sine", gain:0.07}), 90);
+  }
+
+  // 文字盤（目盛り & 5分ごとの数字）
+  function buildFace(){
+    // 60目盛り
+    for (let i=0;i<60;i++){
+      const a = (i * 6) * Math.PI / 180;
+      const isFive = i % 5 === 0;
+
+      const rOuter = 124;
+      const rInner = isFive ? 104 : 112;
+
+      const x1 = 160 + rInner * Math.sin(a);
+      const y1 = 160 - rInner * Math.cos(a);
+      const x2 = 160 + rOuter * Math.sin(a);
+      const y2 = 160 - rOuter * Math.cos(a);
+
+      const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+      line.setAttribute("x1", x1); line.setAttribute("y1", y1);
+      line.setAttribute("x2", x2); line.setAttribute("y2", y2);
+      line.setAttribute("stroke-width", isFive ? "4" : "2");
+      line.setAttribute("opacity", isFive ? "0.9" : "0.35");
+      line.setAttribute("stroke", "#2a3042");
+      line.setAttribute("stroke-linecap", "round");
+      marksG.appendChild(line);
+    }
+
+    // 5分ごと数字（0,5,...55） ※時計の外側に配置
+    for (let m=0; m<60; m+=5){
+      const a = (m * 6) * Math.PI / 180;
+
+      const r = 150; // 数字を円周の外へ
+
+      const x = 160 + r * Math.sin(a);
+      const y = 160 - r * Math.cos(a);
+
+      const t = document.createElementNS("http://www.w3.org/2000/svg", "text");
+      t.setAttribute("x", x);
+      t.setAttribute("y", y);
+      t.setAttribute("fill", "#2a3042");
+      t.setAttribute("font-size", "14");
+      t.setAttribute("font-weight", "900");
+      t.setAttribute("text-anchor", "middle");
+      t.setAttribute("dominant-baseline", "middle");
+      t.textContent = String(m);
+      numsG.appendChild(t);
+    }
+  }
+  buildFace();
+
+  // ひらがな（0〜59）※「ふん／ぷん」まで含めた表記（10/20/30/40/50は括弧つき）
+  const MIN_READING = [
+    "れいふん",
+    "いっぷん",
+    "にふん",
+    "さんぷん",
+    "よんぷん",
+    "ごふん",
+    "ろっぷん",
+    "ななふん",
+    "はっぷん",
+    "きゅうふん",
+    "じゅっぷん（じっぷん）",
+    "じゅういっぷん",
+    "じゅうにふん",
+    "じゅうさんぷん",
+    "じゅうよんぷん",
+    "じゅうごふん",
+    "じゅうろっぷん",
+    "じゅうななふん",
+    "じゅうはっぷん",
+    "じゅうきゅうふん",
+    "にじゅっぷん（にじっぷん）",
+    "にじゅういっぷん",
+    "にじゅうにふん",
+    "にじゅうさんぷん",
+    "にじゅうよんぷん",
+    "にじゅうごふん",
+    "にじゅうろっぷん",
+    "にじゅうななふん",
+    "にじゅうはっぷん",
+    "にじゅうきゅうふん",
+    "さんじゅっぷん（さんじっぷん）",
+    "さんじゅういっぷん",
+    "さんじゅうにふん",
+    "さんじゅうさんぷん",
+    "さんじゅうよんぷん",
+    "さんじゅうごふん",
+    "さんじゅうろっぷん",
+    "さんじゅうななふん",
+    "さんじゅうはっぷん",
+    "さんじゅうきゅうふん",
+    "よんじゅっぷん（よんじっぷん）",
+    "よんじゅういっぷん",
+    "よんじゅうにふん",
+    "よんじゅうさんぷん",
+    "よんじゅうよんぷん",
+    "よんじゅうごふん",
+    "よんじゅうろっぷん",
+    "よんじゅうななふん",
+    "よんじゅうはっぷん",
+    "よんじゅうきゅうふん",
+    "ごじゅっぷん（ごじっぷん）",
+    "ごじゅういっぷん",
+    "ごじゅうにふん",
+    "ごじゅうさんぷん",
+    "ごじゅうよんぷん",
+    "ごじゅうごふん",
+    "ごじゅうろっぷん",
+    "ごじゅうななふん",
+    "ごじゅうはっぷん",
+    "ごじゅうきゅうふん"
+  ];
+
+  function minuteToReading(n){
+    n = Math.max(0, Math.min(59, n));
+    return MIN_READING[n];
+  }
+
+  // モード（デフォルトは10ぷんずつ）
+  let mode = "ten"; // all / five / ten
+  let animating = false;
+
+  function syncActive(){
+    mode10.classList.toggle("active", mode==="ten");
+    mode5.classList.toggle("active", mode==="five");
+    modeAll.classList.toggle("active", mode==="all");
+  }
+
+  function setMode(nextMode){
+    if (animating) return;
+    mode = nextMode;
+    syncActive();
+    setQuestionRandom();
+  }
+
+  // ボタンイベント
+  mode10.addEventListener("click", ()=>setMode("ten"));
+  mode5.addEventListener("click", ()=>setMode("five"));
+  modeAll.addEventListener("click", ()=>setMode("all"));
+
+  // 状態
+  let curMin  = 0; // 0..59
+  let showingAnswer = false;
+
+  function setHand(minute){
+    const m = ((minute % 60) + 60) % 60;
+    minHand.setAttribute("transform", `rotate(${m*6})`);
+  }
+
+  function pickNextMinute(){
+    if (mode === "five"){
+      return Math.floor(Math.random() * 12) * 5; // 0..55
+    }
+    if (mode === "ten"){
+      return Math.floor(Math.random() * 6) * 10; // 0..50
+    }
+    return Math.floor(Math.random() * 60); // 0..59
+  }
+
+  function setQuestionRandom(){
+    curMin = pickNextMinute();
+    setHand(curMin);
+
+    answerText.textContent = PROMPT;
+    srAnswer.textContent = "";
+    showingAnswer = false;
+    mainBtn.textContent = "こたえ";
+  }
+
+  function showAnswer(){
+    const jp = minuteToReading(curMin);
+    answerText.textContent = jp;
+    srAnswer.textContent = `こたえは ${jp} です。`;
+    showingAnswer = true;
+    mainBtn.textContent = "つぎへ";
+  }
+
+  function lockUI(locked){
+    mainBtn.disabled = locked;
+    mode10.disabled = locked;
+    mode5.disabled = locked;
+    modeAll.disabled = locked;
+  }
+
+  function animateToNext(nextMin){
+    animating = true;
+    lockUI(true);
+
+    const start = curMin;
+    let diff = (nextMin - start + 60) % 60;
+    if (diff === 0) diff = 60; // おなじときも1しゅう
+
+    const durationMs = 1000; // つねに1びょう
+    const tStart = performance.now();
+
+    // 「つぎへ」押した瞬間にプロンプト表示
+    answerText.textContent = PROMPT;
+    srAnswer.textContent = "";
+    showingAnswer = false;
+    mainBtn.textContent = "こたえ";
+
+    const step = (now) => {
+      const p = Math.min(1, Math.max(0, (now - tStart) / durationMs));
+      const cur = start + diff * p;
+      setHand(cur);
+
+      if (p < 1){
+        requestAnimationFrame(step);
+      } else {
+        curMin = nextMin;
+        setHand(curMin);
+
+        animating = false;
+        lockUI(false);
+      }
+    };
+
+    requestAnimationFrame(step);
+  }
+
+  mainBtn.addEventListener("click", () => {
+    getCtx();
+    if (animating) return;
+
+    if (!showingAnswer){
+      sfxAnswer();
+      showAnswer();
+    } else {
+      sfxNext();
+      const nxt = pickNextMinute();
+      animateToNext(nxt);
+    }
+  });
+
+  // 初期化（10ぷんずつをデフォルトに）
+  syncActive();
+  setQuestionRandom();
+})();
+</script>
+</body>
+</html>
